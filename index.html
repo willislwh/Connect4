@@ -111,25 +111,30 @@
             position: relative;
         }
 
-        /* Dynamic Axis Scopes */
+        /* Base shared properties for Axis Lines */
         .y-axis, .x-axis { position: absolute; background-color: #111; z-index: 2; pointer-events: none; }
         
-        /* Layout Configurations: Origin Mode */
-        .mode-origin .y-axis { left: -25px; bottom: -25px; width: 3px; height: calc(100% + 50px); }
-        .mode-origin .y-axis::before { content: ''; position: absolute; top: -10px; left: -4.5px; border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 12px solid #111; }
-        .mode-origin .y-axis-label { position: absolute; top: -25px; left: -15px; font-weight: bold; font-size: 18px; }
-        .mode-origin .x-axis { left: -25px; bottom: -25px; height: 3px; width: calc(100% + 50px); }
-        .mode-origin .x-axis::after { content: ''; position: absolute; right: -10px; top: -4.5px; border-top: 6px solid transparent; border-bottom: 6px solid transparent; border-left: 12px solid #111; }
-        .mode-origin .x-axis-label { position: absolute; right: -25px; bottom: -25px; font-weight: bold; font-size: 18px; }
-        .mode-origin .origin-label { position: absolute; left: -35px; bottom: -45px; font-size: 14px; font-weight: bold; color: #666; }
+        /* --- LAYOUT CONFIGURATIONS: ORIGIN MODE (Centered at bottom-left cell) --- */
+        /* Padding 15px + half a cell width 30px = 45px center position */
+        .mode-origin .y-axis { left: 44px; bottom: -30px; width: 2px; height: calc(100% + 60px); }
+        .mode-origin .y-axis::before { content: ''; position: absolute; top: -10px; left: -5px; border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 12px solid #111; }
+        .mode-origin .y-axis-label { position: absolute; top: -30px; left: -12px; font-weight: bold; font-size: 18px; color: #111; }
+        
+        .mode-origin .x-axis { left: -30px; bottom: 44px; height: 2px; width: calc(100% + 60px); }
+        .mode-origin .x-axis::after { content: ''; position: absolute; right: -10px; top: -5px; border-top: 6px solid transparent; border-bottom: 6px solid transparent; border-left: 12px solid #111; }
+        .mode-origin .x-axis-label { position: absolute; right: -30px; bottom: -28px; font-weight: bold; font-size: 18px; color: #111; }
+        
+        .mode-origin .origin-label { position: absolute; left: 52px; bottom: 52px; font-size: 14px; font-weight: bold; color: #111; background: rgba(255,255,255,0.75); padding: 2px 4px; border-radius: 4px; z-index: 3; }
 
-        /* Layout Configurations: Shifted & Timed Modes */
+        /* --- LAYOUT CONFIGURATIONS: SHIFTED & TIMED MODES (Centered at center board cell) --- */
         .mode-shifted .y-axis, .mode-timed .y-axis { left: 254px; bottom: -30px; width: 2px; height: calc(100% + 60px); }
         .mode-shifted .y-axis::before, .mode-timed .y-axis::before { content: ''; position: absolute; top: -10px; left: -5px; border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 12px solid #111; }
-        .mode-shifted .y-axis-label, .mode-timed .y-axis-label { position: absolute; top: -30px; left: -12px; font-weight: bold; font-size: 18px; }
+        .mode-shifted .y-axis-label, .mode-timed .y-axis-label { position: absolute; top: -30px; left: -12px; font-weight: bold; font-size: 18px; color: #111; }
+        
         .mode-shifted .x-axis, .mode-timed .x-axis { left: -30px; bottom: 184px; height: 2px; width: calc(100% + 60px); }
         .mode-shifted .x-axis::after, .mode-timed .x-axis::after { content: ''; position: absolute; right: -10px; top: -5px; border-top: 6px solid transparent; border-bottom: 6px solid transparent; border-left: 12px solid #111; }
-        .mode-shifted .x-axis-label, .mode-timed .x-axis-label { position: absolute; right: -30px; bottom: -28px; font-weight: bold; font-size: 18px; }
+        .mode-shifted .x-axis-label, .mode-timed .x-axis-label { position: absolute; right: -30px; bottom: -28px; font-weight: bold; font-size: 18px; color: #111; }
+        
         .mode-shifted .origin-label, .mode-timed .origin-label { position: absolute; left: 260px; bottom: 190px; font-size: 14px; font-weight: bold; color: #111; background: rgba(255,255,255,0.75); padding: 2px 4px; border-radius: 4px; z-index: 3; }
 
         /* Timer Display Settings */
@@ -141,7 +146,7 @@
             text-align: center;
             min-width: 110px;
             border: 2px solid #ccc;
-            display: none; /* Only turned on in timed scope */
+            display: none; 
         }
         .mode-timed .timer-box { display: block; }
         .timer-title { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #666; margin-bottom: 5px; }
@@ -277,12 +282,12 @@
                 minX = 0; maxX = 6; minY = 0; maxY = 5;
                 xOffset = 0; yOffset = 0;
                 activeTimer = false;
-                gameSubtitle.innerHTML = "Bottom-left origin is (0,0) | X spans 0-6, Y spans 0-5.<br>Penalty Rule: Gravity violations forfeit your turn!";
+                gameSubtitle.innerHTML = "Origin Version: Axes cross directly at the center of cell (0,0).<br>Penalty Rule: Gravity violations forfeit your turn!";
             } else if (mode === 'shifted') {
                 minX = -3; maxX = 3; minY = -2; maxY = 3;
                 xOffset = 3; yOffset = 2;
                 activeTimer = false;
-                gameSubtitle.innerHTML = "Bottom-left is now (-3, -2) | Axes intercept directly at (0,0)<br>Penalty Rule: Gravity violations forfeit your turn!";
+                gameSubtitle.innerHTML = "Bottom-left is now (-3, -2) | Axes intercept directly at center (0,0)<br>Penalty Rule: Gravity violations forfeit your turn!";
             } else if (mode === 'timed') {
                 minX = -3; maxX = 3; minY = -2; maxY = 3;
                 xOffset = 3; yOffset = 2;
@@ -307,11 +312,10 @@
             clearInterval(timerInterval);
             
             // Re-render explicit operational axes configurations
-            const originText = currentMode === 'origin' ? '(0,0)' : '(0,0)';
             boardElement.innerHTML = `
                 <div class="y-axis"><div class="y-axis-label">y</div></div>
                 <div class="x-axis"><div class="x-axis-label">x</div></div>
-                <div class="origin-label">${originText}</div>
+                <div class="origin-label">(0,0)</div>
             `;
             
             board = [];
