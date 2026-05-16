@@ -3,266 +3,460 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connect 4: Shifted Origin Edition</title>
+    <title>Coordinate Connect 4 Hub</title>
     <style>
-        :root {
-            --board-color: #2a52be;
-            --empty-color: #1a1a1a;
-            --player1-color: #ff3b3b;
-            --player2-color: #f9d71c;
-            --bg-color: #f0f2f5;
-        }
-
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 20px;
+            background-color: #f4f4f9;
+            color: #333;
             margin: 0;
+            padding-top: 50px;
         }
 
-        h1 { color: #333; margin-bottom: 5px; }
-        .subtitle { color: #666; margin-bottom: 20px; font-style: italic; }
+        /* --- HOME INDEX SCREEN STYLES --- */
+        .home-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: white;
+            padding: 40px 50px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+        .home-screen h1 {
+            color: #005bb5;
+            margin-bottom: 10px;
+        }
+        .home-screen p {
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+        .menu-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+        }
+        .menu-btn {
+            padding: 15px 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .menu-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        .btn-origin { background-color: #005bb5; }
+        .btn-origin:hover { background-color: #004488; }
+        .btn-shifted { background-color: #2a9d8f; }
+        .btn-shifted:hover { background-color: #1f756b; }
+        .btn-timed { background-color: #e63946; }
+        .btn-timed:hover { background-color: #c72c38; }
 
-        /* Game Layout */
+        /* --- GAME ENGINE SCREEN STYLES --- */
+        .game-screen {
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+        .back-btn {
+            align-self: center;
+            padding: 8px 14px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 20px;
+            transition: background-color 0.2s;
+        }
+        .back-btn:hover { background-color: #5a6268; }
+        
+        h1.game-title { margin-bottom: 5px; }
+        p.subtitle { margin-top: 0; color: #666; text-align: center; height: 40px; }
+        
         .game-container {
             display: flex;
+            flex-direction: row;
+            align-items: center;
             gap: 40px;
-            align-items: flex-start;
-            flex-wrap: wrap;
-            justify-content: center;
+            margin-top: 10px;
+            margin-bottom: 30px;
         }
-
-        /* The Board */
-        .board-outer {
-            padding: 15px;
-            background-color: var(--board-color);
-            border-radius: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            position: relative;
-        }
-
-        .grid {
+        .board-wrapper { position: relative; }
+        .board {
             display: grid;
             grid-template-columns: repeat(7, 60px);
             grid-template-rows: repeat(6, 60px);
             gap: 10px;
+            background-color: #005bb5;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            position: relative;
         }
+
+        /* Dynamic Axis Scopes */
+        .y-axis, .x-axis { position: absolute; background-color: #111; z-index: 2; pointer-events: none; }
+        
+        /* Layout Configurations: Origin Mode */
+        .mode-origin .y-axis { left: -25px; bottom: -25px; width: 3px; height: calc(100% + 50px); }
+        .mode-origin .y-axis::before { content: ''; position: absolute; top: -10px; left: -4.5px; border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 12px solid #111; }
+        .mode-origin .y-axis-label { position: absolute; top: -25px; left: -15px; font-weight: bold; font-size: 18px; }
+        .mode-origin .x-axis { left: -25px; bottom: -25px; height: 3px; width: calc(100% + 50px); }
+        .mode-origin .x-axis::after { content: ''; position: absolute; right: -10px; top: -4.5px; border-top: 6px solid transparent; border-bottom: 6px solid transparent; border-left: 12px solid #111; }
+        .mode-origin .x-axis-label { position: absolute; right: -25px; bottom: -25px; font-weight: bold; font-size: 18px; }
+        .mode-origin .origin-label { position: absolute; left: -35px; bottom: -45px; font-size: 14px; font-weight: bold; color: #666; }
+
+        /* Layout Configurations: Shifted & Timed Modes */
+        .mode-shifted .y-axis, .mode-timed .y-axis { left: 254px; bottom: -30px; width: 2px; height: calc(100% + 60px); }
+        .mode-shifted .y-axis::before, .mode-timed .y-axis::before { content: ''; position: absolute; top: -10px; left: -5px; border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 12px solid #111; }
+        .mode-shifted .y-axis-label, .mode-timed .y-axis-label { position: absolute; top: -30px; left: -12px; font-weight: bold; font-size: 18px; }
+        .mode-shifted .x-axis, .mode-timed .x-axis { left: -30px; bottom: 184px; height: 2px; width: calc(100% + 60px); }
+        .mode-shifted .x-axis::after, .mode-timed .x-axis::after { content: ''; position: absolute; right: -10px; top: -5px; border-top: 6px solid transparent; border-bottom: 6px solid transparent; border-left: 12px solid #111; }
+        .mode-shifted .x-axis-label, .mode-timed .x-axis-label { position: absolute; right: -30px; bottom: -28px; font-weight: bold; font-size: 18px; }
+        .mode-shifted .origin-label, .mode-timed .origin-label { position: absolute; left: 260px; bottom: 190px; font-size: 14px; font-weight: bold; color: #111; background: rgba(255,255,255,0.75); padding: 2px 4px; border-radius: 4px; z-index: 3; }
+
+        /* Timer Display Settings */
+        .timer-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            text-align: center;
+            min-width: 110px;
+            border: 2px solid #ccc;
+            display: none; /* Only turned on in timed scope */
+        }
+        .mode-timed .timer-box { display: block; }
+        .timer-title { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #666; margin-bottom: 5px; }
+        #timer-display { font-size: 54px; font-weight: bold; color: #2a9d8f; }
+        .timer-low { color: #d62828 !important; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0.4; } }
 
         .cell {
             width: 60px;
             height: 60px;
-            background-color: var(--empty-color);
+            background-color: #ffffff;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: inset 0 4px 6px rgba(0,0,0,0.5);
+            box-shadow: inset 0 4px 6px rgba(0,0,0,0.2);
+            transition: background-color 0.3s;
             position: relative;
+            z-index: 1;
         }
-
-        .token {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            transition: all 0.3s ease;
-        }
-
-        .token.p1 { background-color: var(--player1-color); box-shadow: 0 4px #b30000; }
-        .token.p2 { background-color: var(--player2-color); box-shadow: 0 4px #bfa300; }
-
-        /* Axis Labels */
-        .axis-label-x {
-            display: grid;
-            grid-template-columns: repeat(7, 60px);
-            gap: 10px;
-            margin-top: 10px;
-            margin-left: 15px; /* align with board inner padding */
-            text-align: center;
-            font-weight: bold;
-            color: var(--board-color);
-        }
-
-        .y-axis {
-            position: absolute;
-            left: -35px;
-            top: 15px;
-            display: flex;
-            flex-direction: column-reverse;
-            justify-content: space-between;
-            height: 410px;
-            font-weight: bold;
-            color: var(--board-color);
-        }
-
-        /* Controls */
+        .cell.red { background-color: #e63946; box-shadow: inset 0 -4px 6px rgba(0,0,0,0.2), 0 4px 6px rgba(0,0,0,0.2); }
+        .cell.yellow { background-color: #f4a261; box-shadow: inset 0 -4px 6px rgba(0,0,0,0.2), 0 4px 6px rgba(0,0,0,0.2); }
+        
         .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
             background: white;
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            width: 300px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
-
-        .status-box {
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-bottom: 20px;
-            padding: 10px;
-            border-radius: 5px;
-            text-align: center;
-        }
-
-        .p1-turn { background-color: var(--player1-color); color: white; }
-        .p2-turn { background-color: var(--player2-color); color: black; }
-
-        .input-group {
-            margin-bottom: 15px;
-        }
-
-        label { display: block; margin-bottom: 5px; font-weight: 600; }
-        input {
-            width: 100%;
-            padding: 8px;
-            box-sizing: border-box;
-            border: 2px solid #ddd;
-            border-radius: 4px;
-            font-size: 1rem;
-        }
-
-        button {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 5px;
-            font-weight: bold;
+        input[type="number"] { width: 85px; padding: 5px; font-size: 16px; text-align: center; }
+        button.action-btn {
+            padding: 8px 16px;
+            font-size: 16px;
             cursor: pointer;
-            font-size: 1rem;
-            margin-bottom: 10px;
-            transition: transform 0.1s;
+            background-color: #2a9d8f;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            transition: background-color 0.2s;
         }
-
-        button:active { transform: scale(0.98); }
-
-        .btn-submit { background-color: #2ecc71; color: white; }
-        .btn-reset { background-color: #95a5a6; color: white; }
-
-        /* Log */
-        .log-container {
-            margin-top: 20px;
-            max-height: 150px;
-            overflow-y: auto;
-            border-top: 1px solid #eee;
-            padding-top: 10px;
-            font-size: 0.85rem;
-        }
-
-        .log-entry { margin-bottom: 5px; border-left: 3px solid #ddd; padding-left: 8px; }
-        .penalty { color: #e74c3c; font-weight: bold; border-color: #e74c3c; }
+        button.action-btn:hover { background-color: #21867a; }
+        #message { margin-top: 15px; font-size: 18px; font-weight: bold; height: 24px; }
+        .turn-red { color: #e63946; }
+        .turn-yellow { color: #f4a261; }
+        .error { color: #d62828; }
     </style>
 </head>
 <body>
 
-    <h1>Connect 4: Offset Gravity</h1>
-    <div class="subtitle">Bottom-Left Origin is (-3, -2)</div>
-    
-    <div class="game-container">
-        <div style="position: relative;">
-            <div class="y-axis">
-                <span>-2</span><span>-1</span><span>0</span><span>1</span><span>2</span><span>3</span>
-            </div>
-            <div class="board-outer">
-                <div class="grid" id="grid">
+    <div class="home-screen" id="home-screen">
+        <h1>Coordinate Connect 4</h1>
+        <p>Master mathematical mapping rules while aiming to connect four tokens in a row. Select your gameplay format below:</p>
+        <div class="menu-buttons">
+            <button class="menu-btn btn-origin" onclick="launchGame('origin')">Origin Version</button>
+            <button class="menu-btn btn-shifted" onclick="launchGame('shifted')">Shifted Origin Version</button>
+            <button class="menu-btn btn-timed" onclick="launchGame('timed')">Timed Version</button>
+        </div>
+    </div>
+
+    <div class="game-screen" id="game-screen">
+        <button class="back-btn" onclick="returnToMenu()">← Back to Main Menu</button>
+        
+        <h1 class="game-title" id="game-title">Coordinate Connect 4</h1>
+        <p class="subtitle" id="game-subtitle">Game details</p>
+
+        <div id="message" class="turn-red">Player 1 (Red)'s Turn</div>
+
+        <div class="game-container" id="game-layout-container">
+            <div class="board-wrapper">
+                <div class="board" id="board">
                     </div>
             </div>
-            <div class="axis-label-x">
-                <span>-3</span><span>-2</span><span>-1</span><span>0</span><span>1</span><span>2</span><span>3</span>
+
+            <div class="timer-box">
+                <div class="timer-title">Time Left</div>
+                <div id="timer-display">20</div>
             </div>
         </div>
 
         <div class="controls">
-            <div id="status" class="status-box p1-turn">Player 1's Turn (Red)</div>
-            
-            <div class="input-group">
-                <label>X Coordinate (-3 to 3):</label>
-                <input type="number" id="inputX" min="-3" max="3" placeholder="Column">
-            </div>
-            
-            <div class="input-group">
-                <label>Y Coordinate (-2 to 3):</label>
-                <input type="number" id="inputY" min="-2" max="3" placeholder="Row">
-            </div>
-
-            <button class="btn-submit" onclick="makeMove()">Submit Move</button>
-            <button class="btn-reset" onclick="resetGame()">Reset Game</button>
-
-            <div class="log-container" id="log">
-                <div class="log-entry">Game started. Origin is at (-3, -2).</div>
-            </div>
+            <label>
+                X: <input type="number" id="inputX">
+            </label>
+            <label>
+                Y: <input type="number" id="inputY">
+            </label>
+            <button class="action-btn" onclick="placeToken()">Place Token</button>
+            <button class="action-btn" onclick="resetGame()" style="background-color: #6c757d;">Reset Game</button>
         </div>
     </div>
 
     <script>
-        const ROWS = 6;
         const COLS = 7;
-        const OFFSET_X = 3; // Shift X by +3 to map [-3, 3] to [0, 6]
-        const OFFSET_Y = 2; // Shift Y by +2 to map [-2, 3] to [0, 5]
+        const ROWS = 6;
+        const TURN_TIME_LIMIT = 20;
+
+        // Current engine configurations (mutated on launcher setup)
+        let currentMode = 'origin'; 
+        let minX = 0, maxX = 6, minY = 0, maxY = 5;
+        let xOffset = 0, yOffset = 0;
+        let activeTimer = false;
 
         let board = [];
-        let currentPlayer = 1;
+        let currentPlayer = 'red';
         let gameOver = false;
+        let timerInterval = null;
+        let timeLeft = TURN_TIME_LIMIT;
+
+        const homeScreen = document.getElementById('home-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const gameLayoutContainer = document.getElementById('game-layout-container');
+        const gameSubtitle = document.getElementById('game-subtitle');
+        
+        const boardElement = document.getElementById('board');
+        const messageElement = document.getElementById('message');
+        const timerDisplay = document.getElementById('timer-display');
+        const inputX = document.getElementById('inputX');
+        const inputY = document.getElementById('inputY');
+
+        // Launch Game Setup Routing
+        function launchGame(mode) {
+            currentMode = mode;
+            homeScreen.style.display = 'none';
+            gameScreen.style.display = 'flex';
+            
+            // Clean dynamic structural classes
+            gameLayoutContainer.className = "game-container mode-" + mode;
+
+            if (mode === 'origin') {
+                minX = 0; maxX = 6; minY = 0; maxY = 5;
+                xOffset = 0; yOffset = 0;
+                activeTimer = false;
+                gameSubtitle.innerHTML = "Bottom-left origin is (0,0) | X spans 0-6, Y spans 0-5.<br>Penalty Rule: Gravity violations forfeit your turn!";
+            } else if (mode === 'shifted') {
+                minX = -3; maxX = 3; minY = -2; maxY = 3;
+                xOffset = 3; yOffset = 2;
+                activeTimer = false;
+                gameSubtitle.innerHTML = "Bottom-left is now (-3, -2) | Axes intercept directly at (0,0)<br>Penalty Rule: Gravity violations forfeit your turn!";
+            } else if (mode === 'timed') {
+                minX = -3; maxX = 3; minY = -2; maxY = 3;
+                xOffset = 3; yOffset = 2;
+                activeTimer = true;
+                gameSubtitle.innerHTML = "Shifted Origin Setup with 20-Second Turn Counter!<br>Forfeits apply to gravity breaks and clock run-outs.";
+            }
+
+            // Sync structural attributes on numeric node entries
+            inputX.min = minX; inputX.max = maxX; inputX.placeholder = `${minX} to ${maxX}`;
+            inputY.min = minY; inputY.max = maxY; inputY.placeholder = `${minY} to ${maxY}`;
+
+            resetGame();
+        }
+
+        function returnToMenu() {
+            clearInterval(timerInterval);
+            gameScreen.style.display = 'none';
+            homeScreen.style.display = 'flex';
+        }
 
         function initBoard() {
-            const gridElement = document.getElementById('grid');
-            gridElement.innerHTML = '';
-            board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
+            clearInterval(timerInterval);
             
-            // We create cells from top visual row down to bottom visual row
-            for (let r = ROWS - 1; r >= 0; r--) {
-                for (let c = 0; c < COLS; c++) {
+            // Re-render explicit operational axes configurations
+            const originText = currentMode === 'origin' ? '(0,0)' : '(0,0)';
+            boardElement.innerHTML = `
+                <div class="y-axis"><div class="y-axis-label">y</div></div>
+                <div class="x-axis"><div class="x-axis-label">x</div></div>
+                <div class="origin-label">${originText}</div>
+            `;
+            
+            board = [];
+            for (let x = 0; x < COLS; x++) {
+                board[x] = [];
+                for (let y = 0; y < ROWS; y++) {
+                    board[x][y] = null;
+                }
+            }
+
+            for (let y = ROWS - 1; y >= 0; y--) {
+                for (let x = 0; x < COLS; x++) {
                     const cell = document.createElement('div');
                     cell.className = 'cell';
-                    cell.id = `cell-${c}-${r}`; // Use internal indices for DOM ID
-                    gridElement.appendChild(cell);
+                    cell.id = `cell-${x}-${y}`; 
+                    boardElement.appendChild(cell);
                 }
+            }
+            
+            if (activeTimer) {
+                startTimer();
             }
         }
 
-        function addLog(msg, isPenalty = false) {
-            const log = document.getElementById('log');
-            const entry = document.createElement('div');
-            entry.className = isPenalty ? 'log-entry penalty' : 'log-entry';
-            entry.innerText = msg;
-            log.prepend(entry);
+        // Clock Systems
+        function startTimer() {
+            clearInterval(timerInterval);
+            timeLeft = TURN_TIME_LIMIT;
+            updateTimerUI();
+
+            timerInterval = setInterval(() => {
+                if (gameOver) {
+                    clearInterval(timerInterval);
+                    return;
+                }
+                
+                timeLeft--;
+                updateTimerUI();
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    handleTimeout();
+                }
+            }, 1000);
         }
 
-        function switchPlayer() {
-            currentPlayer = currentPlayer === 1 ? 2 : 1;
-            const status = document.getElementById('status');
-            status.innerText = `Player ${currentPlayer}'s Turn (${currentPlayer === 1 ? 'Red' : 'Yellow'})`;
-            status.className = `status-box ${currentPlayer === 1 ? 'p1-turn' : 'p2-turn'}`;
+        function updateTimerUI() {
+            timerDisplay.textContent = timeLeft;
+            if (timeLeft <= 5) {
+                timerDisplay.classList.add('timer-low');
+            } else {
+                timerDisplay.classList.remove('timer-low');
+            }
         }
 
-        function checkWin(c, r) {
-            const player = board[r][c];
+        function handleTimeout() {
+            const nextPlayer = currentPlayer === 'red' ? 'yellow' : 'red';
+            const nextPlayerName = nextPlayer === 'red' ? '1 (Red)' : '2 (Yellow)';
+            showMessage(`Time's Up! Turn forfeited. It is now Player ${nextPlayerName}'s Turn.`, `turn-${nextPlayer}`);
+            
+            currentPlayer = nextPlayer;
+            clearInputs();
+            startTimer();
+        }
+
+        function placeToken() {
+            if (gameOver) return;
+
+            const userX = parseInt(inputX.value);
+            const userY = parseInt(inputY.value);
+
+            // Bounds Evaluation depending on configuration boundaries
+            if (isNaN(userX) || isNaN(userY) || userX < minX || userX > maxX || userY < minY || userY > maxY) {
+                showMessage(`Out of bounds! X must be ${minX}-${maxX}, Y must be ${minY}-${maxY}.`, "error");
+                return;
+            }
+
+            // Convert to true operational array metrics using dynamic offsets
+            const x = userX + xOffset;
+            const y = userY + yOffset;
+
+            let lowestAvailableY = 0;
+            while (lowestAvailableY < ROWS && board[x][lowestAvailableY] !== null) {
+                lowestAvailableY++;
+            }
+
+            if (lowestAvailableY === ROWS) {
+                showMessage(`Column X=${userX} is completely full!`, "error");
+                return;
+            }
+
+            const expectedUserY = lowestAvailableY - yOffset;
+            if (userY !== expectedUserY) {
+                const nextPlayer = currentPlayer === 'red' ? 'yellow' : 'red';
+                const nextPlayerName = nextPlayer === 'red' ? '1 (Red)' : '2 (Yellow)';
+                
+                showMessage(`Gravity Violation! Token falls to Y=${expectedUserY}. Turn forfeited to Player ${nextPlayerName}.`, `turn-${nextPlayer}`);
+                
+                currentPlayer = nextPlayer;
+                clearInputs();
+                if (activeTimer) startTimer();
+                return;
+            }
+
+            board[x][y] = currentPlayer;
+            const cellElement = document.getElementById(`cell-${x}-${y}`);
+            cellElement.classList.add(currentPlayer);
+
+            if (checkWin(x, y, currentPlayer)) {
+                showMessage(`Player ${currentPlayer === 'red' ? '1 (Red)' : '2 (Yellow)'} Wins!`, `turn-${currentPlayer}`);
+                gameOver = true;
+                clearInterval(timerInterval);
+                return;
+            }
+
+            if (checkDraw()) {
+                showMessage("It's a Draw!", "");
+                gameOver = true;
+                clearInterval(timerInterval);
+                return;
+            }
+
+            currentPlayer = currentPlayer === 'red' ? 'yellow' : 'red';
+            clearInputs();
+            if (activeTimer) startTimer();
+            showMessage(`Player ${currentPlayer === 'red' ? '1 (Red)' : '2 (Yellow)'}'s Turn`, `turn-${currentPlayer}`);
+        }
+
+        function checkWin(x, y, player) {
             const directions = [
-                [[0, 1], [0, -1]],  // Vertical
-                [[1, 0], [-1, 0]],  // Horizontal
-                [[1, 1], [-1, -1]], // Diagonal /
-                [[1, -1], [-1, 1]]  // Diagonal \
+                [[1, 0], [-1, 0]], 
+                [[0, 1], [0, -1]], 
+                [[1, 1], [-1, -1]],
+                [[1, -1], [-1, 1]] 
             ];
 
             for (let dir of directions) {
-                let count = 1;
-                for (let [dx, dy] of dir) {
-                    let nc = c + dx;
-                    let nr = r + dy;
-                    while (nc >= 0 && nc < COLS && nr >= 0 && nr < ROWS && board[nr][nc] === player) {
+                let count = 1; 
+                for (let halfDir of dir) {
+                    let dx = x + halfDir[0];
+                    let dy = y + halfDir[1];
+                    while (dx >= 0 && dx < COLS && dy >= 0 && dy < ROWS && board[dx][dy] === player) {
                         count++;
-                        nc += dx;
-                        nr += dy;
+                        dx += halfDir[0];
+                        dy += halfDir[1];
                     }
                 }
                 if (count >= 4) return true;
@@ -270,74 +464,37 @@
             return false;
         }
 
-        function makeMove() {
-            if (gameOver) return;
-
-            const userX = parseInt(document.getElementById('inputX').value);
-            const userY = parseInt(document.getElementById('inputY').value);
-
-            // 1. Check Bounds based on new user coordinate system
-            if (isNaN(userX) || isNaN(userY) || userX < -3 || userX > 3 || userY < -2 || userY > 3) {
-                addLog(`P${currentPlayer}: Invalid Coordinates (${userX},${userY}). Turn lost!`, true);
-                switchPlayer();
-                return;
+        function checkDraw() {
+            for (let x = 0; x < COLS; x++) {
+                if (board[x][ROWS - 1] === null) return false;
             }
+            return true;
+        }
 
-            // Map user coordinates to internal array indices
-            const c = userX + OFFSET_X;
-            const r = userY + OFFSET_Y;
+        function showMessage(msg, className) {
+            messageElement.textContent = msg;
+            messageElement.className = className;
+        }
 
-            // 2. Check Occupancy
-            if (board[r][c] !== 0) {
-                addLog(`P${currentPlayer}: Slot (${userX},${userY}) is taken. Turn lost!`, true);
-                switchPlayer();
-                return;
-            }
-
-            // 3. Gravity Rule Check
-            // A piece must be at userY = -2 (which is internal r = 0) OR have a piece directly below it
-            const hasSupport = (userY === -2) || (board[r - 1][c] !== 0);
-            if (!hasSupport) {
-                addLog(`P${currentPlayer}: Gravity Violation at (${userX},${userY})! Turn lost!`, true);
-                switchPlayer();
-                return;
-            }
-
-            // 4. Valid Move
-            board[r][c] = currentPlayer;
-            const cell = document.getElementById(`cell-${c}-${r}`);
-            const token = document.createElement('div');
-            token.className = `token ${currentPlayer === 1 ? 'p1' : 'p2'}`;
-            cell.appendChild(token);
-            
-            addLog(`P${currentPlayer} placed at (${userX},${userY})`);
-
-            if (checkWin(c, r)) {
-                document.getElementById('status').innerText = `PLAYER ${currentPlayer} WINS!`;
-                document.getElementById('status').style.backgroundColor = "#27ae60";
-                document.getElementById('status').style.color = "white";
-                gameOver = true;
-                addLog(`GAME OVER - Player ${currentPlayer} won!`);
-                return;
-            }
-
-            switchPlayer();
+        function clearInputs() {
+            inputX.value = '';
+            inputY.value = '';
+            inputX.focus();
         }
 
         function resetGame() {
-            currentPlayer = 1;
+            currentPlayer = 'red';
             gameOver = false;
-            document.getElementById('inputX').value = '';
-            document.getElementById('inputY').value = '';
-            document.getElementById('log').innerHTML = '<div class="log-entry">Game Reset. Origin is (-3, -2).</div>';
-            const status = document.getElementById('status');
-            status.innerText = "Player 1's Turn (Red)";
-            status.className = "status-box p1-turn";
+            clearInputs();
+            showMessage("Player 1 (Red)'s Turn", "turn-red");
             initBoard();
         }
 
-        // Initialize on load
-        initBoard();
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' && gameScreen.style.display === 'flex') {
+                placeToken();
+            }
+        });
     </script>
 </body>
 </html>
